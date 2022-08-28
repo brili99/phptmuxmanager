@@ -1,0 +1,6 @@
+{
+    "name": "brili99/phptmuxmanager",
+    "require": {
+        "phpseclib/phpseclib": "^3.0"
+    }
+}

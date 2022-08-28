@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        .btnCard {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="bg-dark pt-2">
+    <div class="container">
+        <div class="row mb-2">
+            <div class="col-md-6 col-sm-12">
+                <div class="card bg-grey">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between">
+                            <div class="fs-5">List Session</div>
+                            <button id="btnTambahSession" class="btn btn-primary btn-sm">Tambah Session</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-bordered" id="tableTmuxSession">
+                            <thead>
+                                <tr>
+                                    <th>List Session</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodytableTmuxSession"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-12">
+                <div class="card">
+                    <div class="card-header fs-5">Execute command to tmux session</div>
+                    <div class="card-body">
+                        <form id="formExecuteCommand">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="selectListSession" aria-label="List session" name="session"></select>
+                                <label for="selectListSession">Pilih session</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="floatingInputValue" placeholder="whoami" name="command">
+                                <label for="floatingInputValue">Masukan perintah</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Get tmux output</div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <select class="form-select" id="selectListSessionOutput" aria-label="List session" name="session"></select>
+                    <button class="btn btn-primary" type="button" id="btnGetOutput">Get output</button>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" placeholder="Click get output button to get output" id="sessionOutput" style="height: 400px;" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function refreshListSession() {
+            $.post("api/", {
+                    action: "tmuxLs",
+                })
+                .done(function(data) {
+                    if (data['msg'] == "success") {
+                        $('#bodytableTmuxSession').html("");
+                        $('#selectListSession').html("");
+                        $('#selectListSessionOutput').html("");
+                        $.each(data['data'], function(index, value) {
+                            if (value != "") {
+                                $('#bodytableTmuxSession').append(tableRowBuilder(value));
+                                $('#selectListSession').append(optionSelectBuilder(value));
+                                $('#selectListSessionOutput').append(optionSelectBuilder(value));
+                            }
+                        });
+                    } else if (data['msg'] == "login_first") {
+                        window.location.replace("login.php");
+                    }
+                });
+        }
+
+        function tableRowBuilder(isiRow) {
+            var ret = "<tr>";
+            ret += "<td>";
+            ret += isiRow;
+            ret += "</td>";
+            ret += "</tr>";
+            return ret;
+        }
+
+        function optionSelectBuilder(isiSelect) {
+            const sanitasi = isiSelect.split(":");
+            return `<option value="${sanitasi[0]}">${sanitasi[0]}</option>`;
+        }
+        $(document).ready(function() {
+            refreshListSession();
+
+            $("#btnTambahSession").click(function() {
+                Swal.fire({
+                    title: 'Masukan nama session',
+                    html: `<input type="text" id="namaSession" class="swal2-input" placeholder="Masukan nama session">`,
+                    confirmButtonText: 'Tambah',
+                    focusConfirm: false,
+                    preConfirm: () => {
+                        const namaSession = Swal.getPopup().querySelector('#namaSession').value
+                        if (!namaSession) {
+                            Swal.showValidationMessage(`Harap isi semua kolom`)
+                        }
+                        return {
+                            namaSession: namaSession
+                        }
+                    }
+                }).then((result) => {
+                    if (result.value != null) {
+                        if (result.value.namaSession != null) {
+                            $.post("api/", {
+                                    action: "newSession",
+                                    nama_session: result.value.namaSession
+                                })
+                                .done(function(data) {
+                                    if (data['msg'] == "success") {
+                                        refreshListSession();
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil!',
+                                            text: 'Session baru telah ditambahkan',
+                                            timer: 1500
+                                        })
+                                    }
+                                });
+                        }
+
+                    }
+                })
+
+            });
+
+            $("#formExecuteCommand").submit(function(event) {
+                var values = {};
+                $.each($('#formExecuteCommand').serializeArray(), function(i, field) {
+                    values[field.name] = field.value;
+                });
+
+                $.post("api/", {
+                        action: "executeCommand",
+                        nama_session: values.session,
+                        command: values.command
+                    })
+                    .done(function(data) {
+                        if (data['msg'] == "success") {
+                            refreshListSession();
+                            // Swal.fire({
+                            //     icon: 'success',
+                            //     title: 'Berhasil!',
+                            //     text: 'Perintah telah dimasukkan',
+                            //     timer: 1500
+                            // });
+                            $("#btnGetOutput").click();
+                        }
+                    });
+                event.preventDefault();
+            });
+
+            $("#btnGetOutput").click(function() {
+                $.post("api/", {
+                        action: "getOutputSession",
+                        nama_session: $('#selectListSessionOutput').val()
+                    })
+                    .done(function(data) {
+                        if (data['msg'] == "success") {
+                            $('#sessionOutput').val(data['data']);
+                            var objDiv = document.getElementById("sessionOutput");
+                            objDiv.scrollTop = objDiv.scrollHeight;
+                        }
+                    });
+            });
+        });
+    </script>
+</body>
+
+</html>
