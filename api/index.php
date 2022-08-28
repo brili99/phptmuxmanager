@@ -4,8 +4,8 @@ include('../vendor/autoload.php');
 
 use phpseclib3\Net\SSH2;
 
-$server_host = isset($_REQUEST['host']) ? $_REQUEST['host'] : "localhost";
-$server_port = isset($_REQUEST['port']) ? $_REQUEST['port'] : 22;
+$_SESSION["host"] = isset($_REQUEST['host']) ? $_REQUEST['host'] : "localhost";
+$_SESSION["port"] = isset($_REQUEST['port']) ? $_REQUEST['port'] : 22;
 
 $ret = [];
 if (
@@ -22,7 +22,7 @@ if (
 ) {
     $ret['msg'] = "login_first";
 } else if (isset($_REQUEST['action'])) {
-    $ssh = new SSH2($server_host, $server_port);
+    $ssh = new SSH2($_SESSION["host"], $_SESSION["port"]);
     // if ($expected != $ssh->getServerPublicHostKey()) {
     //     throw new \Exception('Host key verification failed');
     // }
