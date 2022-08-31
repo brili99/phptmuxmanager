@@ -158,6 +158,8 @@
                                             text: 'Session baru telah ditambahkan',
                                             timer: 1500
                                         })
+                                    } else if (data['msg'] == "login_first") {
+                                        window.location.replace("login.html");
                                     }
                                 });
                         }
@@ -188,6 +190,8 @@
                             //     timer: 1500
                             // });
                             $("#btnGetOutput").click();
+                        } else if (data['msg'] == "login_first") {
+                            window.location.replace("login.html");
                         }
                     });
                 event.preventDefault();
@@ -203,6 +207,8 @@
                             $('#sessionOutput').val(data['data']);
                             var objDiv = document.getElementById("sessionOutput");
                             objDiv.scrollTop = objDiv.scrollHeight;
+                        } else if (data['msg'] == "login_first") {
+                            window.location.replace("login.html");
                         }
                     });
             });
