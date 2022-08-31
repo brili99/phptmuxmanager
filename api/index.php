@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 session_start();
 include('../vendor/autoload.php');
 
@@ -34,7 +37,13 @@ if (
             // $ret['debug'] = $ssh->getServerPublicHostKey();
         } else if ($_REQUEST['action'] == "tmuxLs") {
             $ret['msg'] = "success";
-            $ret['data'] = explode("\n", $ssh->exec('tmux ls'));
+            $fb = $ssh->exec('tmux ls');
+            if (strpos($fb, "no server running")  !== false) {
+                // $ret['data'] = "";
+                $ret['msg'] = "empty";
+            } else {
+                $ret['data'] = explode("\n", $ssh->exec('tmux ls'));
+            }
         } else if ($_REQUEST['action'] == "newSession") {
             if (isset($_REQUEST['nama_session'])) {
                 $ret['msg'] = "success";
